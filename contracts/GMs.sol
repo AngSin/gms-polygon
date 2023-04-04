@@ -18,6 +18,7 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         uint256 startTimestamp;
         uint256 period;
         bool isWl;
+        address[] claimed;
     }
 
     ClaimEvent[] public claimEvents;
@@ -27,7 +28,7 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
     bool public isSoulbound;
 
     function initialize() initializer public {
-        baseUri = "https://gms-metadata.s3.eu-central-1.amazonaws.com/";
+        baseUri = "https://gms-metadata.s3.eu-central-1.amazonaws.com/polygon/";
         isSoulbound = true;
         __ERC1155_init(baseUri);
         __Ownable_init();
@@ -43,13 +44,17 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         isSoulbound = _isSoulbound;
     }
 
+    function setBaseUri(string calldata _baseUri) public onlyOwnerOrController {
+        baseUri = _baseUri;
+    }
+
     function setControllers(address[] calldata _controllers, bool _enabled) public onlyOwner {
         for (uint256 i = 0; i < _controllers.length; i++) {
             addressToIsController[_controllers[i]] = _enabled;
         }
     }
 
-    function isController(address _controller) public returns (bool) {
+    function isController(address _controller) public view returns (bool) {
         return addressToIsController[_controller];
     }
 
@@ -98,6 +103,16 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
 
     function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
 
+    function hasUserClaimed(uint256 _claimEventIndex) public view returns (bool) {
+        ClaimEvent memory claimEvent = claimEvents[_claimEventIndex];
+        for (uint256 i = 0; i < claimEvent.claimed.length; i++) {
+            if (claimEvent.claimed[i] == msg.sender) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function claim(bytes32[] memory _proof, uint256 _claimEventIndex) public {
         ClaimEvent memory claimEvent = claimEvents[_claimEventIndex];
         require(claimEvent.startTimestamp > 0, "Claim hasn't started yet!");
@@ -105,8 +120,9 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         if (claimEvent.isWl) {
             require(MerkleProof.verify(_proof, claimEvent.root, keccak256(bytes.concat(keccak256(abi.encode(msg.sender))))), "You are not whitelisted for this gm!");
         }
-        require(super.balanceOf(msg.sender, claimEvent.tokenId) == 0, "You already have this gm!");
+        require(!hasUserClaimed(_claimEventIndex), "You already have this gm!");
         super._mint(msg.sender, claimEvent.tokenId, 1, "");
+        claimEvents[_claimEventIndex].claimed.push(msg.sender);
     }
 
     function burn(uint256 _id) public {
@@ -118,8 +134,9 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         bytes32 _root,
         uint256 _claimPeriod,
         bool _isWl
-    ) public onlyOwner {
-        ClaimEvent memory claimEvent = ClaimEvent(_claimId, _root, block.timestamp, _claimPeriod, _isWl);
+    ) public onlyOwnerOrController {
+        address[] memory emptyArray = new address[](0);
+        ClaimEvent memory claimEvent = ClaimEvent(_claimId, _root, block.timestamp, _claimPeriod, _isWl, emptyArray);
         claimEvents.push(claimEvent);
     }
 }
