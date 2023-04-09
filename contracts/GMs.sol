@@ -5,12 +5,11 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
-contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract GMs is Initializable, ERC1155Upgradeable, UUPSUpgradeable {
     using Strings for uint256;
     struct ClaimEvent {
         uint256 tokenId;
@@ -26,17 +25,18 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
     string public baseUri;
     mapping(address => bool) private addressToIsController;
     bool public isSoulbound;
+    address public owner;
 
     function initialize() initializer public {
         baseUri = "https://gms-metadata.s3.eu-central-1.amazonaws.com/polygon/";
         isSoulbound = true;
+        owner = msg.sender;
         __ERC1155_init(baseUri);
-        __Ownable_init();
         __UUPSUpgradeable_init();
     }
 
     modifier onlyOwnerOrController() {
-        require(isController(msg.sender) || super.owner() == msg.sender, "Caller is not controller or owner!");
+        require(isController(msg.sender) || owner == msg.sender, "Caller is not controller or owner!");
         _;
     }
 
@@ -48,7 +48,7 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         baseUri = _baseUri;
     }
 
-    function setControllers(address[] calldata _controllers, bool _enabled) public onlyOwner {
+    function setControllers(address[] calldata _controllers, bool _enabled) public onlyOwnerOrController {
         for (uint256 i = 0; i < _controllers.length; i++) {
             addressToIsController[_controllers[i]] = _enabled;
         }
@@ -101,7 +101,7 @@ contract GMs is Initializable, ERC1155Upgradeable, OwnableUpgradeable, UUPSUpgra
         return string(abi.encodePacked(baseUri, _tokenId.toString()));
     }
 
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    function _authorizeUpgrade(address newImplementation) internal onlyOwnerOrController override {}
 
     function hasUserClaimed(uint256 _claimEventIndex) public view returns (bool) {
         ClaimEvent memory claimEvent = claimEvents[_claimEventIndex];
