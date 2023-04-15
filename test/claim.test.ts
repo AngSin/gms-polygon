@@ -2,7 +2,6 @@ import {ethers} from 'hardhat';
 import {deployProxy} from "./utils";
 import {GMs} from "../typechain-types";
 import { expect } from "chai";
-import {Bytes} from "@ethersproject/bytes/src.ts";
 
 describe('claim', () => {
 	it('only lets users claim once', async () => {
