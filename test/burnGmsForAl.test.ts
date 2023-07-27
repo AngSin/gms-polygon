@@ -35,7 +35,7 @@ describe("burnTokens", () => {
 
     await gmsContract
       .connect(otherAccount)
-      .burnTokens(otherAccount.address, [3, 2], [balance3, balance2]);
+      .burnTokens([3, 2], [balance3, balance2]);
 
     const filter = gmsContract.filters.RedeemFreeMint();
     const events = await gmsContract.queryFilter(filter);
@@ -43,7 +43,7 @@ describe("burnTokens", () => {
     expect(events).to.not.be.empty;
     const event = events[0];
 
-    expect(event.args.status).to.equal(1);
+    expect(event.args.quantity).to.equal(1);
   });
 
   it("User tries to burn less than 20 points", async () => {
@@ -78,7 +78,7 @@ describe("burnTokens", () => {
     try {
       await gmsContract
         .connect(otherAccount)
-        .burnTokens(otherAccount.address, [3, 2], [balance3, balance2]);
+        .burnTokens([3, 2], [balance3, balance2]);
     } catch (err) {
       if (err instanceof Error) {
         expect(
@@ -126,7 +126,7 @@ describe("burnTokens", () => {
 
     await gmsContract
       .connect(otherAccount)
-      .burnTokens(otherAccount.address, [1, 2], [balance1, balance2]);
+      .burnTokens([1, 2], [balance1, balance2]);
 
     const filter = gmsContract.filters.RedeemFreeMint();
     const events = await gmsContract.queryFilter(filter);
@@ -134,6 +134,6 @@ describe("burnTokens", () => {
     expect(events).to.not.be.empty;
     const event = events[0];
 
-    expect(event.args.status).to.equal(5);
+    expect(event.args.quantity).to.equal(5);
   });
 });
