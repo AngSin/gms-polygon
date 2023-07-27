@@ -8,7 +8,7 @@ contract GMsV5 is GMsV4 {
     uint256 public lastTokenId;
     mapping(uint256 => uint256) public tokenPoints;
 
-    event RedeemFreeMint(address indexed user, uint256 status);
+    event RedeemFreeMint(address indexed user, uint256 quantity);
 
     function setTokenPoints(uint256 _tokenId, uint256 _points) public onlyOwnerOrController {
         tokenPoints[_tokenId] = _points;
@@ -29,20 +29,20 @@ contract GMsV5 is GMsV4 {
         lastTokenId = _lastTokenId;
     }
 
-    function burnTokens(address _wallet, uint256[] calldata _tokenIds, uint256[] calldata _amounts) public {
+    function burnTokens(uint256[] calldata _tokenIds, uint256[] calldata _amounts) public {
         uint256 expectedBurnedPoints = 0;
-        uint256 status = 0;
+        uint256 quantity = 0;
 
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             expectedBurnedPoints +=  tokenPoints[_tokenIds[i]] * _amounts[i];
         }
 
-        require(expectedBurnedPoints >= 20, "Cannot redeem AL without burning at least 20 points");
+        require(expectedBurnedPoints >= 20, "Cannot redeem Free Mint without burning at least 20 points");
 
-        super._burnBatch(_wallet, _tokenIds, _amounts);
+        super._burnBatch(msg.sender, _tokenIds, _amounts);
 
-        status = expectedBurnedPoints / 20;
+        quantity = expectedBurnedPoints / 20;
 
-        emit RedeemFreeMint(_wallet, status);
+        emit RedeemFreeMint(msg.sender, quantity);
     }
 }
