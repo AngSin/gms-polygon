@@ -16,36 +16,33 @@ describe("burnTokens", () => {
     let addresses2 = new Array(5).fill(otherAccount.address);
     await gmsContract.airdropGMs(2, addresses2);
 
-    await gmsContract.setupTokenPoints();
+    // setup
+    await gmsContract.setTokenPoints(3, 1);
+    await gmsContract.setTokenPoints(2, 2);
+    await gmsContract.setLastTokenId(6);
 
     // Check that the airdrop was successful for tokenId 3
     let balance3 = await gmsContract.balanceOf(otherAccount.address, 3);
-    console.log("Balance of Token Id 3: ", balance3.toString());
     expect(balance3.toNumber()).to.equal(10);
 
     // Check that the airdrop was successful for tokenId 2
     let balance2 = await gmsContract.balanceOf(otherAccount.address, 2);
-    console.log("Balance of Token Id 2: ", balance2.toString());
     expect(balance2.toNumber()).to.equal(5);
 
     // Check that the total points is 10 + 5(2) = 20
-    const initialPoints = await gmsContract.checkPoints(otherAccount.address);
+    const initialPoints = await gmsContract.getUserPoints(otherAccount.address);
     expect(initialPoints.toNumber()).to.equal(20);
-
-    console.log(initialPoints);
 
     await gmsContract
       .connect(otherAccount)
       .burnTokens(otherAccount.address, [3, 2], [balance3, balance2]);
 
-    const filter = gmsContract.filters.UserPointsStatus();
-    console.log(filter);
+    const filter = gmsContract.filters.RedeemFreeMint();
     const events = await gmsContract.queryFilter(filter);
 
     expect(events).to.not.be.empty;
     const event = events[0];
 
-    console.log(event);
     expect(event.args.status).to.equal(1);
   });
 
@@ -61,23 +58,22 @@ describe("burnTokens", () => {
     let addresses2 = new Array(5).fill(otherAccount.address);
     await gmsContract.airdropGMs(2, addresses2);
 
-    await gmsContract.setupTokenPoints();
+    // setup
+    await gmsContract.setTokenPoints(3, 1);
+    await gmsContract.setTokenPoints(2, 2);
+    await gmsContract.setLastTokenId(6);
 
     // Check that the airdrop was successful for tokenId 3
     let balance3 = await gmsContract.balanceOf(otherAccount.address, 3);
-    console.log("Balance of Token Id 3: ", balance3.toString());
     expect(balance3.toNumber()).to.equal(9);
 
     // Check that the airdrop was successful for tokenId 2
     let balance2 = await gmsContract.balanceOf(otherAccount.address, 2);
-    console.log("Balance of Token Id 2: ", balance2.toString());
     expect(balance2.toNumber()).to.equal(5);
 
     // Check that the total points is 10 + 5(2) = 20
-    const initialPoints = await gmsContract.checkPoints(otherAccount.address);
+    const initialPoints = await gmsContract.getUserPoints(otherAccount.address);
     expect(initialPoints.toNumber()).to.equal(19);
-
-    console.log(initialPoints);
 
     try {
       await gmsContract
@@ -111,36 +107,33 @@ describe("burnTokens", () => {
     let addresses2 = new Array(10).fill(otherAccount.address);
     await gmsContract.airdropGMs(2, addresses2);
 
-    await gmsContract.setupTokenPoints();
+    // setup
+    await gmsContract.setTokenPoints(1, 5);
+    await gmsContract.setTokenPoints(2, 2);
+    await gmsContract.setLastTokenId(6);
 
     // Check that the airdrop was successful for tokenId 1
     let balance1 = await gmsContract.balanceOf(otherAccount.address, 1);
-    console.log("Balance of Token Id 3: ", balance1.toString());
     expect(balance1.toNumber()).to.equal(16);
 
     // Check that the airdrop was successful for tokenId 2
     let balance2 = await gmsContract.balanceOf(otherAccount.address, 2);
-    console.log("Balance of Token Id 2: ", balance2.toString());
     expect(balance2.toNumber()).to.equal(10);
 
     // Check that the total points is 100
-    const initialPoints = await gmsContract.checkPoints(otherAccount.address);
+    const initialPoints = await gmsContract.getUserPoints(otherAccount.address);
     expect(initialPoints.toNumber()).to.equal(100);
-
-    console.log(initialPoints);
 
     await gmsContract
       .connect(otherAccount)
       .burnTokens(otherAccount.address, [1, 2], [balance1, balance2]);
 
-    const filter = gmsContract.filters.UserPointsStatus();
-    console.log(filter);
+    const filter = gmsContract.filters.RedeemFreeMint();
     const events = await gmsContract.queryFilter(filter);
 
     expect(events).to.not.be.empty;
     const event = events[0];
 
-    console.log(event);
     expect(event.args.status).to.equal(5);
   });
 });
