@@ -19,9 +19,7 @@ contract GMsV5 is GMsV4 {
         for (uint256 i = 1; i <= lastTokenId; i++) {
             uint256 balance = balanceOf(_wallet, i);
 
-            if (balance > 0) {
-                userPoints += balance * tokenPoints[i];
-            }
+            userPoints += balance * tokenPoints[i];
         }
 
         return userPoints;
@@ -30,7 +28,6 @@ contract GMsV5 is GMsV4 {
     function setLastTokenId(uint256 _lastTokenId) public onlyOwnerOrController {
         lastTokenId = _lastTokenId;
     }
-    
 
     function burnTokens(address _wallet, uint256[] calldata _tokenIds, uint256[] calldata _amounts) public {
         uint256 expectedBurnedPoints = 0;
